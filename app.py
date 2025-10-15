@@ -1,4 +1,4 @@
-import os
+import os # <--- INI SUDAH BENAR
 import zipfile
 import io
 import mimetypes
@@ -13,7 +13,10 @@ from PIL import Image
 # --------------------------
 app = Flask(__name__)
 # Kunci rahasia wajib
-app.config['SECRET_KEY'] = 'kunci_rahasia_untuk_sesi_aman_dan_polling_98765' 
+app.config['SECRET_KEY'] = os.environ.get( 
+    'SECRET_KEY', 
+    'FALLBACK_KUNCI_LOKAL_4567' 
+) # <--- GANTI SELURUH BARIS INI
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600
 
 # Storage In-Memory: Data file sementara yang diupload
