@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>yasConverting! - Konverter Gambar Anda!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        /* --------------------------
+        GLOBAL & TEMA GELAP (DARK MODE)
+        -------------------------- */
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #2b2b2b;
+            --text-light: #f0f0f0;
+            --text-dark: #b0b0b0;
+            --primary-color: #ff8c00; /* Oranye */
+            --secondary-color: #4a4a4a; /* Warna latar belakang sekunder */
+            --success-color: #28a745;
+            --error-color: #dc3545;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            /* FIX 3: Tambahkan Gradient Background yang Subtil */
+            background: linear-gradient(135deg, #121212 0%, #1a1a1a 50%, #121212 100%);
+            color: var(--text-light);
+            font-size: 14px;
+        }
+        
+        /* FIX 1 & 2: HEADER TETAP DI POJOK KIRI ATAS */
+        .app-header-fixed {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 1.5em;
+            font-weight: 800;
+            z-index: 10;
+            
+            /* FIX 3: Gradasi pada teks judul */
+            background: linear-gradient(90deg, #ff8c00, #ff4500); /* Orange/Red Gradient */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 500px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+            position: relative;
+        }
+        
+        /* --------------------------
+        HEADER & MENU BUTTON
+        -------------------------- */
+        .header {
+            display: flex;
+            /* FIX: Pindahkan semua konten ke kanan untuk tombol menu (kecuali h1 yang di-absolute) */
+            justify-content: flex-end; 
+            align-items: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        /* FIX 2: H1 (Judul di dalam card) diperkecil/diubah perannya */
+        h1 {
+            color: var(--text-light);
+            font-size: 1.5em; 
+            font-weight: 800;
+            margin: 0;
+            flex-grow: 1;
+            text-align: center;
+            /* Posisikan di tengah card secara absolut */
+            position: absolute; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%; /* Batasi lebar */
+        }
+        
+        .menu-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 2em;
+            padding: 0;
+            line-height: 1;
+            position: absolute;
+            top: 0px; /* Diubah dari 20px agar rata dengan h1 yang baru */
+            right: 0px; /* Diubah dari 20px agar lebih dekat ke tepi padding */
+            width: 30px;
+            height: 30px;
+            z-index: 10;
+            transition: color 0.2s;
+        }
+        .menu-btn:hover {
+            color: var(--primary-color);
+        }
+        
+        /* --------------------------
+        TABS/BUTTONS
+        -------------------------- */
+        .tab-menu {
+            display: flex;
+            margin-bottom: 25px;
+            background-color: #3d3d3d;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 10px;
+            border: none;
+            background: transparent;
+            color: var(--text-dark);
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Styling untuk Tab yang Aktif (Upload) */
+        .tab-btn.active {
+            background-color: var(--card-bg);
+            color: var(--text-light);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* --------------------------
+        MODAL UTAMA (Pop-up)
+        -------------------------- */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.7); 
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 15% auto; 
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #4a4a4a;
+            width: 80%;
+            max-width: 350px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            position: relative; 
+        }
+        
+        /* FIX: Tombol Tutup X */
+        .close-btn {
+            color: var(--text-dark);
+            font-size: 32px; 
+            font-weight: 300;
+            position: absolute;
+            top: 5px; 
+            right: 15px; 
+            cursor: pointer;
+            line-height: 1;
+            padding: 5px; 
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: var(--text-light);
+            text-decoration: none;
+        }
+
+        /* --------------------------
+        MODAL KONVENSI (MENU)
+        -------------------------- */
+        .modal-content h2 {
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            font-weight: 800;
+        }
+
+        .modal-content ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .modal-content li {
+            margin-bottom: 20px;
+        }
+
+        .modal-content a {
+            color: var(--card-bg); 
+            background-color: var(--primary-color); 
+            text-decoration: none;
+            font-weight: 800;
+            display: block;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            transition: background-color 0.2s;
+        }
+        
+        .modal-content .link-description {
+            color: var(--text-dark);
+            font-size: 0.85em;
+            text-align: center;
+            margin-top: 5px;
+            margin-bottom: 0;
+            word-break: break-all;
+        }
+
+        .modal-content .link-group {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px dashed #4a4a4a;
+        }
+        .modal-content .link-group a {
+            background-color: #3d3d3d; 
+            color: var(--text-light);
+            font-weight: 600;
+        }
+        
+        /* --------------------------
+        INPUT & SELECT
+        -------------------------- */
+        .custom-file-upload {
+            padding: 15px;
+            border-radius: 8px;
+            box-sizing: border-box;
+            cursor: pointer;
+            text-align: center;
+            background-color: #3d3d3d;
+            color: var(--text-light);
+            font-weight: 600;
+            border: 2px dashed #555;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        
+        .format-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 1em;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M7%2010L12%2015L17%2010H7Z%22%20fill%3D%22%23f0f0f0%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px top 50%;
+            cursor: pointer;
+        }
+
+        /* --------------------------
+        DAFTAR FILE (LOG)
+        -------------------------- */
+        #fileList {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background-color: #3d3d3d;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        .file-info {
+            flex-grow: 1;
+            margin-right: 15px;
+        }
+        .file-name {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .file-status {
+            font-size: 0.85em;
+            color: var(--text-dark);
+        }
+        .status-completed { color: var(--success-color); }
+        .status-error { color: var(--error-color); }
+
+        .progress-bar-container {
+            height: 6px;
+            background-color: #555;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary-color);
+            transition: width 0.4s ease;
+        }
+
+        .remove-btn {
+            background: none;
+            border: none;
+            color: var(--error-color);
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 0 5px;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+        .download-btn {
+            background-color: var(--success-color);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+        
+        /* --------------------------
+        INSTRUKSI KONVERSI
+        -------------------------- */
+        .instruction-box {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #3d3d3d;
+            border-radius: 8px;
+        }
+        
+        /* --------------------------
+        TOMBOL KONVERSI UTAMA
+        -------------------------- */
+        /* FIX 3: Gradasi dan Shadow yang lebih mencolok */
+        #convertButton {
+            background: linear-gradient(90deg, #ff8c00, #ff6347); /* Orange to Tomato Gradient */
+            color: #1a1a1a; 
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 800;
+            width: 100%;
+            margin-top: 20px;
+            box-shadow: 0 6px 15px rgba(255, 140, 0, 0.4); 
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        #convertButton:hover:not(:disabled) {
+             box-shadow: 0 8px 20px rgba(255, 140, 0, 0.6);
+             filter: brightness(1.1);
+        }
+        
+        #convertButton:disabled {
+             background: #6e6e6e;
+             color: #b0b0b0;
+             cursor: not-allowed;
+             box-shadow: none;
+        }
+        
+        /* --------------------------
+        NOTIFIKASI (FIXED POSITION)
+        -------------------------- */
+        #messageBox {
+            position: fixed;
+            top: 20px;
+            left: 50%; 
+            transform: translateX(-50%) translateY(-20px); 
+            background-color: var(--error-color);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s, transform 0.5s;
+            font-weight: 600;
+            text-align: center;
+            max-width: 90%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #messageBox.show {
+            display: block;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Spinner for converting status */
+        .converting-spinner {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border: 2px solid #fff;
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+    
+    <!-- FIX 1 & 2: Judul Utama Aplikasi Fixed di Pojok Kiri Atas -->
+    <div class="app-header-fixed">yasConverting!</div>
+
+    <div class="container">
+        
+        <div class="header">
+            <!-- Ikon Hamburger Menu untuk Pop-up -->
+            <button id="menuButton" class="menu-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            <!-- FIX 2: Judul di dalam Card diubah perannya -->
+            <h1>Upload File Anda!</h1>
+        </div>
+
+        <!-- Tab Menu -->
+        <div class="tab-menu">
+            <!-- Tab Upload tetap menjadi Tab Aktif -->
+            <button class="tab-btn active" data-tab="uploadTab">Upload Disini ⬇️</button>
+            <!-- Tombol Format sekarang membuka Modal -->
+            <button class="tab-btn" id="formatButton">Format 🗃️</button> 
+        </div>
+
+        <!-- Isi Tab -->
+        <div id="uploadTab" class="tab-content">
+            <div id="uploadContainer">
+                <label for="fileInput" class="custom-file-upload">
+                    Upload File / Zip
+                </label>
+                <!-- FIX: fileInput diubah menjadi display:none dan hanya dipicu oleh label -->
+                <input type="file" id="fileInput" name="file" accept="image/*, .zip" multiple style="display:none;">
+            </div>
+            
+            <h2>Daftar File:</h2>
+            <ul id="fileList">
+                <!-- File items akan dimasukkan di sini oleh JS -->
+            </ul>
+
+            <!-- Instruksi Konversi (Diposisikan di bawah box sesuai permintaan) -->
+            <div class="instruction-box">
+                <h3>Cara Convert:</h3>
+                <ol>
+                    <li>Klik tombol "Format" di atas, lalu Pilih tujuan Convert</li>
+                    <li>Upload File Gambar atau ZIP di tombol "Upload File/Zip".</li>
+                    <li>Tunggu loading, lalu klik tombol "CONVERT".</li>
+                    <li>Tunggu proses selesai, lalu klik tombol "Download".</li>
+                    <li>— Note, Untuk convert bersekala banyak Sebaiknya bungkus dengan Zip!.
+                    <li>Subscribe yt: @yasaaoursea
+                </ol>
+            </div>
+        </div>
+
+        <!-- Tombol Konversi -->
+        <button id="convertButton" disabled>
+            Pilih File Dahulu 🐸
+        </button>
+    </div>
+
+    <!-- MODAL POP-UP MENU UTAMA -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModalBtn">&times;</span>
+            <h2>MENU</h2>
+            <ul>
+                <!-- 1. My Youtube! -->
+                <li>
+                    <a href="https://www.youtube.com/@yasaaoursea" target="_blank">
+                        My Youtube!
+                    </a>
+                    <p class="link-description">com.youtube/@yasaaoursea</p>
+                </li>
+                <!-- 2. Donate Me! -->
+                <li>
+                    <a href="https://sociabuzz.com/yasaaoursea/support" target="_blank">
+                        Donate Me!
+                    </a>
+                    <p class="link-description">https://sociabuzz.com/yasaaoursea/support</p>
+                </li>
+            </ul>
+            
+            <!-- 3. Web Lainnya (Link di Sembunyikan) -->
+            <div class="link-group">
+                <p style="color: var(--text-light); font-weight: 800; font-size: 1.1em; margin-bottom: 10px;">Web Lainnya</p>
+                <ul>
+                    <!-- Deskripsi link dihapus agar URL tersembunyi/tidak ditampilkan -->
+                    <li style="margin-bottom: 10px;"><a href="Coming Soon" target="_blank">—</a></li>
+                    <li style="margin-bottom: 0;"><a href="Coming Soon" target="_blank">—</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- MODAL POP-UP FORMAT BARU -->
+    <div id="formatModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeFormatModalBtn">&times;</span>
+            <h2>Pilih Format Output</h2>
+            <div class="format-group">
+                <label for="formatSelect">Format Tujuan Konversi:</label>
+                <select id="formatSelect">
+                    <option value="png">PNG (Keep Transparansi)</option>
+                    <option value="bmp">BMP (8 INDEXED)</option>
+                    <option value="tga">TGA (Keep Transparansi)</option>
+                </select>
+            </div>
+            <button onclick="document.getElementById('formatModal').style.display='none'" style="margin-top: 30px;">
+                Selesai :)
+            </button>
+        </div>
+    </div>
+
+
+    <!-- PENGGANTI ALERT -->
+    <div id="messageBox"></div>
+
+    <script>
+        // --------------------------
+        // KODE JAVASCRIPT (Tidak Berubah Fungsionalitas)
+        // --------------------------
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const convertButton = document.getElementById('convertButton');
+        const formatSelect = document.getElementById('formatSelect');
+        const messageBox = document.getElementById('messageBox');
+        
+        // Modal Elements
+        const menuButton = document.getElementById('menuButton');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        
+        // Format Modal Elements
+        const formatButton = document.getElementById('formatButton');
+        const formatModal = document.getElementById('formatModal');
+        const closeFormatModalBtn = document.getElementById('closeFormatModalBtn');
+
+        // Logika Modal Menu Utama
+        menuButton.onclick = () => settingsModal.style.display = 'block';
+        closeModalBtn.onclick = () => settingsModal.style.display = 'none';
+        
+        // Logika Modal Format
+        formatButton.onclick = () => formatModal.style.display = 'block';
+        closeFormatModalBtn.onclick = () => formatModal.style.display = 'none';
+
+        // Menutup Modal saat mengklik di luar konten
+        window.onclick = (event) => {
+            if (event.target == settingsModal) {
+                settingsModal.style.display = 'none';
+            }
+            if (event.target == formatModal) {
+                formatModal.style.display = 'none';
+            }
+        };
+
+        // Logika Tab (Hanya tersisa tab upload yang selalu aktif)
+        formatButton.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            formatButton.classList.add('active');
+        });
+        document.querySelector('[data-tab="uploadTab"]').addEventListener('click', (e) => {
+             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+             e.target.classList.add('active');
+        });
+
+
+        // Objek untuk melacak status semua file
+        const uploadedFiles = {}; 
+        let pollingInterval = null; 
+
+        // Fungsi Notifikasi (FIXED POSITION)
+        function showMessage(message, type = 'error') {
+            messageBox.textContent = message;
+            messageBox.className = 'show';
+            messageBox.style.backgroundColor = type === 'error' ? 'var(--error-color)' : 'var(--success-color)';
+            
+            setTimeout(() => {
+                messageBox.className = '';
+            }, 5000);
+        }
+
+        // --------------------------
+        // FUNGISIONALITAS UTAMA
+        // --------------------------
+
+        // 1. Menerima File dari Input dan Memulai Upload AJAX
+        fileInput.addEventListener('change', function() {
+            if (!this.files || this.files.length === 0) {
+                return;
+            }
+
+            for (let i = 0; i < this.files.length; i++) {
+                const file = this.files[i];
+                if (file.size === 0) continue; 
+                
+                const fileId = 'f-' + Date.now() + '-' + i; 
+                uploadedFiles[fileId] = { 
+                    name: file.name, 
+                    status: 'uploading', 
+                    element: null, 
+                    server_id: null, 
+                };
+                
+                renderFileItem(fileId, file.name);
+                uploadFile(fileId, file);
+            }
+            
+            this.value = ''; 
+        });
+
+        // 2. Render File Item Baru di UI
+        function renderFileItem(fileId, filename) {
+            const li = document.createElement('li');
+            li.className = 'file-item';
+            li.id = fileId;
+            li.innerHTML = `
+                <div class="file-info">
+                    <span class="file-name">${filename}</span>
+                    <div class="progress-bar-container">
+                        <div id="${fileId}-progress" class="progress-bar" style="width: 0%;"></div>
+                    </div>
+                    <span id="${fileId}-status" class="file-status status-uploading">Menunggu Upload...</span>
+                </div>
+                <button class="remove-btn" data-file-id="${fileId}" onclick="removeFile('${fileId}')" title="Hapus File">✕</button>
+            `;
+            fileList.prepend(li); 
+            uploadedFiles[fileId].element = li;
+            updateConvertButtonStatus();
+        }
+
+        // 3. Upload File ke Server via AJAX
+        function uploadFile(fileId, file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload');
+            
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    const progressBar = document.getElementById(`${fileId}-progress`);
+                    const statusSpan = document.getElementById(`${fileId}-status`);
+                    
+                    if (progressBar) progressBar.style.width = `${percent}%`;
+                    if (statusSpan) statusSpan.textContent = `Mengunggah... ${percent}%`;
+                }
+            });
+
+            xhr.onload = function() {
+                const statusSpan = document.getElementById(`${fileId}-status`);
+                const progressBar = document.getElementById(`${fileId}-progress`);
+                
+                if (!statusSpan) return; 
+
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    uploadedFiles[fileId].status = 'uploaded'; 
+                    uploadedFiles[fileId].server_id = response.file_id;
+                    
+                    statusSpan.textContent = 'Siap Konversi';
+                    statusSpan.className = 'file-status status-completed';
+                    progressBar.style.backgroundColor = 'var(--success-color)'; 
+                    progressBar.style.width = '100%';
+                    
+                } else {
+                    const errorMsg = xhr.responseText ? JSON.parse(xhr.responseText).message : `Gagal upload! Kode Status: ${xhr.status}`;
+                    console.error("Error Upload:", errorMsg);
+                    showMessage(`Gagal mengunggah ${file.name}: ${errorMsg}`);
+
+                    uploadedFiles[fileId].status = 'error';
+                    statusSpan.textContent = `Gagal Upload: ${errorMsg}`;
+                    statusSpan.className = 'file-status status-error';
+                    progressBar.style.backgroundColor = 'var(--error-color)'; 
+                }
+                updateConvertButtonStatus();
+            };
+            
+            xhr.onerror = function() {
+                const statusSpan = document.getElementById(`${fileId}-status`);
+                const errorMsg = 'Error Jaringan/Server: Upload gagal.';
+                console.error("Error Upload Jaringan:", errorMsg);
+                showMessage(errorMsg);
+
+                if (statusSpan) {
+                    statusSpan.textContent = 'Error Jaringan/Server!';
+                    statusSpan.className = 'file-status status-error';
+                }
+                uploadedFiles[fileId].status = 'error';
+                updateConvertButtonStatus();
+            };
+            
+            xhr.send(formData);
+        }
+
+        // 4. Hapus File
+        window.removeFile = function(fileId) {
+            const file = uploadedFiles[fileId];
+            if (!file) return;
+
+            if (file.element) file.element.parentNode.removeChild(file.element);
+            
+            if (file.server_id) {
+                fetch(`/remove/${file.server_id}`, { method: 'POST' }).catch(err => console.error("Gagal menghapus di server:", err));
+            }
+            
+            delete uploadedFiles[fileId];
+            updateConvertButtonStatus();
+        }
+
+        // 5. Update Status Tombol Konversi
+        function updateConvertButtonStatus() {
+            const readyFiles = Object.values(uploadedFiles).filter(f => f.status === 'uploaded');
+            const isConverting = Object.values(uploadedFiles).some(f => f.status === 'converting');
+            
+            convertButton.disabled = readyFiles.length === 0 || isConverting;
+            
+            if (isConverting) {
+                convertButton.textContent = 'Sedang Memproses...';
+            } else if (readyFiles.length > 0) {
+                convertButton.textContent = `CONVERT (${readyFiles.length} file ke ${formatSelect.value.toUpperCase()})`;
+            } else {
+                convertButton.textContent = 'Pilih File Dahulu';
+            }
+        }
+
+        // 6. Listener Tombol Konversi & Format Select
+        convertButton.addEventListener('click', startConversion);
+        formatSelect.addEventListener('change', updateConvertButtonStatus);
+
+        // 7. Proses Konversi (AJAX START)
+        async function startConversion() {
+            convertButton.disabled = true;
+            
+            const filesToConvert = Object.values(uploadedFiles).filter(f => f.status === 'uploaded');
+            const fileIds = filesToConvert.map(f => f.server_id);
+            const targetFormat = formatSelect.value;
+            
+            if (fileIds.length === 0) {
+                updateConvertButtonStatus();
+                return;
+            }
+
+            filesToConvert.forEach(file => {
+                file.status = 'converting'; 
+                const fileItem = file.element;
+                const progressBar = fileItem.querySelector('.progress-bar');
+                const statusSpan = document.getElementById(`${fileItem.id}-status`);
+
+                statusSpan.innerHTML = '<span class="converting-spinner"></span> Sedang Konversi...';
+                statusSpan.className = 'file-status status-converting';
+                progressBar.style.backgroundColor = 'var(--primary-color)'; 
+                
+                const removeBtn = fileItem.querySelector('.remove-btn');
+                if (removeBtn) removeBtn.style.display = 'none';
+
+                const oldDownloadBtn = fileItem.querySelector('.download-btn');
+                if (oldDownloadBtn) oldDownloadBtn.remove();
+            });
+            
+            try {
+                const startResponse = await fetch('/start_conversion', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ format: targetFormat, file_ids: fileIds })
+                });
+
+                const startData = await startResponse.json();
+                
+                if (startData.success) {
+                    startPolling(startData.job_id, filesToConvert);
+                } else {
+                    console.error('Gagal memulai konversi:', startData.message);
+                    showMessage(`Gagal memulai konversi: ${startData.message}`);
+                    filesToConvert.forEach(file => file.status = 'uploaded'); 
+                    updateConvertButtonStatus();
+                }
+
+            } catch (error) {
+                console.error('Error Jaringan saat memulai konversi:', error);
+                showMessage('Terjadi error jaringan saat memulai konversi.');
+                filesToConvert.forEach(file => file.status = 'uploaded'); 
+                updateConvertButtonStatus();
+            }
+        }
+        
+        // 8. Polling Status Konversi
+        function startPolling(jobId, filesToConvert) {
+            
+            if (pollingInterval) clearInterval(pollingInterval); 
+
+            pollingInterval = setInterval(async () => {
+                
+                try {
+                    const response = await fetch(`/get_conversion_status/${jobId}`);
+                    const data = await response.json();
+                    
+                    if (data.status === 'error') {
+                        clearInterval(pollingInterval);
+                        pollingInterval = null; 
+                        console.error('Konversi Gagal Total:', data);
+                        showMessage(`Konversi Gagal Total: ${data.message || 'Error Server'}`);
+                        filesToConvert.filter(f => f.status === 'converting').forEach(file => {
+                            file.status = 'converted';
+                            const statusSpan = document.getElementById(`${file.element.id}-status`);
+                            const progressBar = document.getElementById(`${file.element.id}-progress`);
+                            if (statusSpan) {
+                                statusSpan.textContent = `Gagal Total Batch!`;
+                                statusSpan.className = 'file-status status-error';
+                            }
+                            if (progressBar) progressBar.style.backgroundColor = 'var(--error-color)';
+                        });
+                        updateConvertButtonStatus();
+                        return;
+                    }
+
+                    const globalProgress = data.progress;
+                    
+                    convertButton.textContent = `Sedang Memproses... ${globalProgress}% Selesai`;
+
+                    data.results.forEach(result => {
+                        const file = Object.values(uploadedFiles).find(f => f.server_id === result.file_id);
+                        if (!file || file.status !== 'converting') return; 
+
+                        const fileItem = file.element;
+                        const progressBar = fileItem.querySelector('.progress-bar');
+                        
+                        if (result.status === 'completed') {
+                            file.status = 'converted'; 
+                            showMessage(`Konversi ${file.name} selesai.`, 'success');
+                            
+                            progressBar.style.width = '100%';
+                            progressBar.style.backgroundColor = 'var(--success-color)';
+                            
+                            const statusSpan = document.getElementById(`${fileItem.id}-status`);
+                            statusSpan.textContent = `Selesai (${result.download_name})`;
+                            statusSpan.className = 'file-status status-completed';
+
+                            const oldSpinner = statusSpan.querySelector('.converting-spinner');
+                            if (oldSpinner) oldSpinner.remove();
+
+
+                            const downloadBtn = document.createElement('a');
+                            downloadBtn.href = `/download/${result.file_id}`;
+                            downloadBtn.className = 'download-btn';
+                            downloadBtn.textContent = 'Download';
+                            downloadBtn.download = result.download_name;
+                            
+                            fileItem.appendChild(downloadBtn);
+                            
+                        } else if (result.status === 'error') {
+                            file.status = 'converted'; 
+                            
+                            console.error(`Error Konversi File ${file.name}: ${result.message}`);
+                            showMessage(`Konversi gagal untuk ${file.name}: ${result.message}`);
+
+                            progressBar.style.width = '100%';
+                            progressBar.style.backgroundColor = 'var(--error-color)';
+                            
+                            const statusSpan = document.getElementById(`${fileItem.id}-status`);
+                            statusSpan.textContent = `Gagal: ${result.message}`;
+                            statusSpan.className = 'file-status status-error';
+                            
+                            const removeBtn = fileItem.querySelector('.remove-btn');
+                            if (removeBtn) removeBtn.style.display = 'block'; 
+                        }
+                    });
+
+                    if (data.status === 'completed' && globalProgress === 100) {
+                        clearInterval(pollingInterval);
+                        pollingInterval = null;
+                        updateConvertButtonStatus();
+                        showMessage("Semua konversi selesai! Anda bisa mengunggah file baru.", 'success');
+                    }
+
+                } catch (error) {
+                    console.error("Error Polling Status Konversi Jaringan:", error);
+                }
+            }, 1000); 
+        }
+    </script>
+</body>
+</html>
+
