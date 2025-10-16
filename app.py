@@ -1,10 +1,9 @@
-import os # <--- INI SUDAH BENAR
+# app.py (VERSI BARU UNTUK PYTHONANYWHERE FREE TIER)
+
+# Hapus: import os
 import zipfile
 import io
-import mimetypes
-import uuid
-import time
-import threading 
+# ... (lanjutan import lainnya)
 from flask import Flask, render_template, request, jsonify, send_file, session
 from PIL import Image
 
@@ -12,12 +11,14 @@ from PIL import Image
 # KONFIGURASI & STORAGE APLIKASI
 # --------------------------
 app = Flask(__name__)
-# Kunci rahasia wajib
-app.config['SECRET_KEY'] = os.environ.get( 
-    'SECRET_KEY', 
-    'FALLBACK_KUNCI_LOKAL_4567' 
-) # <--- GANTI SELURUH BARIS INI
+# Ganti dengan kunci rahasia unik Anda di sini.
+# Di PythonAnywhere Free Tier, ini harus dikodekan (hardcoded)
+# karena Anda tidak dapat menggunakan environment variables.
+app.config['SECRET_KEY'] = 'KUNCI_RAHASIA_KUAT_DAN_UNIK_YANG_ANDA_BUAT' # <--- GANTI TEKS INI
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600
+
+# ... (lanjutan kode Anda)
+
 
 # Storage In-Memory: Data file sementara yang diupload
 TEMP_STORAGE = {} 
